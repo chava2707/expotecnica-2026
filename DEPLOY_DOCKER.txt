@@ -1,0 +1,151 @@
+================================================================================
+ EXPOTÉCNICA 2026 - DESPLIEGUE CON DOCKER (para el encargado de subir la web)
+================================================================================
+
+Con Docker ya NO se necesita instalar PHP, MySQL, Composer ni Node en la
+máquina. Todo se ejecuta dentro de contenedores (app, worker de correos y
+base de datos MySQL).
+
+El proyecto incluye los archivos listos:
+  - Dockerfile            -> imagen con PHP 8.3 + Apache + dependencias + frontend
+  - docker-compose.yml    -> define los 3 servicios (app, worker, mysql)
+  - docker/               -> entrypoint.sh (configura la app al arrancar)
+                             apache-site.conf (servir la carpeta public/)
+
+
+-------------------------------------------------------------------------------
+1. CÓMO ENTREGAR EL PROYECTO AL ENCARGADO
+-------------------------------------------------------------------------------
+
+OPCIÓN A - Por ZIP (la más simple):
+  1) Copiar la carpeta del proyecto a otra carpeta "limpia".
+  2) Borrar/NO incluir:  node_modules ,  vendor ,  .env  (el .env contiene
+     datos personales; se genera en la instalación con el paso 4).
+  3) Comprimir esa carpeta en un .zip y entregarla.
+     El .zip pesa muy poco y ya incluye todo lo necesario.
+
+OPCIÓN B - Por Git (recomendada si hay más de un desarrollador):
+  1) Subir el proyecto a un repositorio (GitHub/GitLab).
+  2) El encargado hace:  git clone <url-del-repositorio>
+  (node_modules y vendor ya están ignorados por .gitignore).
+
+En AMBOS casos, en la máquina destino solo se necesita:
+  - Docker Desktop  (https://www.docker.com/products/docker-desktop/)
+  - Un navegador
+
+
+-------------------------------------------------------------------------------
+2. PASOS EN LA MÁQUINA DESTINO (primer despliegue)
+-------------------------------------------------------------------------------
+
+  1) Instalar Docker Desktop y abrirlo (debe quedar corriendo).
+     En Windows, si da error de virtualización, habilitar WSL2:
+        docker desktop -> Settings -> General -> marcar
+        "Use the WSL 2 based engine".
+
+  2) Copiar/descomprimir el proyecto y entrar a la carpeta en la terminal:
+        cd Calificacion_Proyectos
+
+  3) Crear el archivo .env a partir del ejemplo (ya viene configurado para
+     producción; solo faltan los datos reales de la sección 4):
+        copy .env.example .env        (Windows)
+        cp .env.example .env          (Linux/Mac)
+
+  4) Levantar todo (la primera vez tarda unos minutos en compilar):
+        docker compose up -d --build
+
+  5) Sembrar los datos iniciales (roles, rúbricas, categorías y usuarios
+     de prueba: admin@test.com / password, etc.). SOLO la primera vez:
+        docker compose exec app php artisan db:seed --force
+
+  6) Abrir la web en el navegador:
+        http://localhost:8000
+
+  Nota: las tablas se crean solas al arrancar (migraciones automáticas).
+  Los correos quedan en cola y el worker de la app los envía automáticamente.
+
+
+-------------------------------------------------------------------------------
+3. COMANDOS ÚTILES (mantenimiento)
+-------------------------------------------------------------------------------
+
+  Ver el estado de los contenedores:        docker compose ps
+  Ver los registros (logs) de la app:        docker compose logs -f app
+  Ver los logs del worker de correos:        docker compose logs -f worker
+  Reiniciar los servicios:                    docker compose restart
+  Apagar todo (los datos se conservan):      docker compose down
+  Apagar Y borrar la base de datos:          docker compose down -v   (¡CUIDADO!)
+
+  Terminal dentro de la app (para artisan):
+        docker compose exec app php artisan <comando>
+
+  Ejemplos:
+        docker compose exec app php artisan migrate:fresh --seed
+        docker compose exec app php artisan optimize:clear
+        docker compose exec app php artisan queue:failed
+
+  Recompilar tras cambios en el código:
+        docker compose up -d --build
+
+
+-------------------------------------------------------------------------------
+4. CAMBIAR CONTRASEÑAS / CORREOS (producción)
+-------------------------------------------------------------------------------
+
+Todo se controla desde el archivo .env (se crea con el paso 3 de la sección 2)
+o editando docker-compose.yml. Valores más importantes:
+
+  APP_ENV=production            -> póngalo en "production"
+  APP_DEBUG=0                   -> 0 = no mostrar errores; 1 = mostrar
+  APP_URL=http://localhost:8000  -> SUSTITUIR por el dominio real, ej:
+                                    https://expotecnica.edu
+  DB_PASSWORD=expo_secreto       -> clave de la base de datos
+  DB_ROOT_PASSWORD=expo_root     -> clave de "root" de MySQL
+  SESSION_DOMAIN=null            -> si usa un dominio, ponga .misdominio.com
+                                    (solo si tiene subdominios)
+
+  Correos (si el servidor ya tiene correo SMTP, ej. Gmail):
+  MAIL_MAILER=smtp
+  MAIL_HOST=smtp.gmail.com
+  MAIL_PORT=587
+  MAIL_USERNAME=tu-correo@gmail.com
+  MAIL_PASSWORD=contraseña-de-aplicación
+  MAIL_FROM_ADDRESS=tu-correo@gmail.com
+  MAIL_ENCRYPTION=tls
+
+  IMPORTANTE: en Docker el host de la base de datos SIEMPRE es "mysql"
+  (DB_HOST=mysql), NO "127.0.0.1". No lo cambie.
+
+
+-------------------------------------------------------------------------------
+5. BACKUPS
+-------------------------------------------------------------------------------
+
+Los datos viven en los "volúmenes" de Docker y sobreviven a los reinicios.
+Para respaldar la base de datos (recomendado a diario):
+
+  docker compose exec mysql sh -c 'exec mysqldump -uroot -p"$MYSQL_ROOT_PASSWORD" expo' > respaldo.sql
+
+Para restaurar:
+  docker compose exec -T mysql sh -c 'exec mysql -uroot -p"$MYSQL_ROOT_PASSWORD" expo' < respaldo.sql
+
+Los archivos subidos (PDFs/imágenes de proyectos) están en el volumen
+"uploads_data" y también conviene respaldarlos.
+
+
+-------------------------------------------------------------------------------
+6. SOLUCIÓN DE PROBLEMAS COMUNES
+-------------------------------------------------------------------------------
+
+  "puerto 8000 en uso" -> cambiar en docker-compose.yml la línea
+      ports: "8000:80"  por  "8001:80"  y abrir http://localhost:8001
+
+  La web carga pero sin estilos ->  npm run build no se ejecutó bien.
+      Reconstruir:  docker compose up -d --build
+
+  Error de conexión a la base de datos al arrancar -> esperar unos segundos;
+      MySQL tarda en estar listo la primera vez (los contenedores se inician
+      automáticamente cuando MySQL está sano). Ver: docker compose ps
+
+  Los correos no llegan -> revisar  docker compose logs -f worker
+      y confirmar los datos de MAIL_* en el .env.

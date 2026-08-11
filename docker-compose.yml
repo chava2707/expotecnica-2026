@@ -1,0 +1,87 @@
+name: expotecnica
+
+# Variables compartidas por "app" y "worker".
+# Nota: los valores ${...} se pueden sobreescribir editando el archivo .env del proyecto.
+x-app-base: &app-base
+  image: expotecnica-app
+  restart: unless-stopped
+  environment: &app-env
+    APP_NAME: "ExpoTECNICA"
+    APP_ENV: "${APP_ENV:-production}"
+    APP_DEBUG: "${APP_DEBUG:-0}"
+    APP_URL: "${APP_URL:-http://localhost:8000}"
+    APP_LOCALE: es
+    APP_FALLBACK_LOCALE: en
+    APP_FAKER_LOCALE: es_ES
+    BCRYPT_ROUNDS: "10"
+    LOG_CHANNEL: stack
+    LOG_LEVEL: error
+    DB_CONNECTION: mysql
+    DB_HOST: mysql
+    DB_PORT: "3306"
+    DB_DATABASE: "${DB_DATABASE:-expo}"
+    DB_USERNAME: "${DB_USERNAME:-expo}"
+    DB_PASSWORD: "${DB_PASSWORD:-expo_secreto}"
+    SESSION_DRIVER: database
+    SESSION_LIFETIME: "120"
+    CACHE_STORE: database
+    QUEUE_CONNECTION: database
+    FILESYSTEM_DISK: local
+    MAIL_MAILER: "${MAIL_MAILER:-smtp}"
+    MAIL_HOST: "${MAIL_HOST:-smtp.gmail.com}"
+    MAIL_PORT: "${MAIL_PORT:-587}"
+    MAIL_USERNAME: "${MAIL_USERNAME:-jkart2731@gmail.com}"
+    MAIL_PASSWORD: "${MAIL_PASSWORD:-prdckplaervizikb}"
+    MAIL_FROM_ADDRESS: "${MAIL_FROM_ADDRESS:-jkart2731@gmail.com}"
+    MAIL_FROM_NAME: "ExpoTECNICA"
+    MAIL_ENCRYPTION: tls
+  volumes:
+    - app_data:/var/www/html/storage/app
+    - uploads_data:/var/www/html/storage/app/public
+    - framework_data:/var/www/html/storage/framework
+    - logs_data:/var/www/html/storage/logs
+  depends_on:
+    mysql:
+      condition: service_healthy
+
+services:
+  app:
+    <<: *app-base
+    build:
+      context: .
+    container_name: expotecnica-app
+    ports:
+      - "8000:80"
+
+  worker:
+    <<: *app-base
+    container_name: expotecnica-worker
+    environment:
+      <<: *app-env
+      QUEUE_WORKER: "true"
+    command: php artisan queue:work --queue=emails --sleep=3 --timeout=60 --tries=1
+
+  mysql:
+    image: mysql:8.0
+    container_name: expotecnica-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: "${DB_DATABASE:-expo}"
+      MYSQL_USER: "${DB_USERNAME:-expo}"
+      MYSQL_PASSWORD: "${DB_PASSWORD:-expo_secreto}"
+      MYSQL_ROOT_PASSWORD: "${DB_ROOT_PASSWORD:-expo_root}"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${DB_ROOT_PASSWORD:-expo_root}"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+      start_period: 15s
+
+volumes:
+  app_data:
+  uploads_data:
+  framework_data:
+  logs_data:
+  mysql_data:

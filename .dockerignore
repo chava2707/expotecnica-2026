@@ -1,0 +1,26 @@
+.git
+.gitattributes
+.github
+.idea
+.vscode
+node_modules
+vendor
+public/build
+public/hot
+public/fonts-manifest.dev.json
+.env
+.env.*
+!.env.example
+storage/app/public
+storage/*.key
+storage/framework/cache/data/*
+storage/framework/sessions/*
+storage/framework/views/*
+storage/logs/*
+bootstrap/cache/packages.php
+bootstrap/cache/services.php
+database/database.sqlite
+*.log
+Thumbs.db
+Anexo 1*.xlsx
+REQUISITOS_Y_EJECUCION.txt

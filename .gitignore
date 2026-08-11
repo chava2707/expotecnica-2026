@@ -1,0 +1,71 @@
+# ============================================
+#  Archivos de entorno (¡NUNCA subir .env!)
+# ============================================
+.env
+.env.*
+!.env.example
+.env.backup
+.env.production
+
+# ============================================
+#  Dependencias
+# ============================================
+/node_modules
+/vendor
+
+# ============================================
+#  Frontend compilado (Vite)
+# ============================================
+/public/build
+/public/hot
+/public/fonts-manifest.dev.json
+/public/storage
+
+# ============================================
+#  Storage / archivos subidos por la app
+# ============================================
+/storage/*.key
+/storage/.app_key
+/storage/pail
+/storage/framework/cache/*
+/storage/framework/cache/data/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+/storage/logs/*
+
+# ============================================
+#  Base de datos SQLite (solo desarrollo)
+# ============================================
+/database/database.sqlite
+/database/database.sqlite-journal
+
+# ============================================
+#  Logs y cachés
+# ============================================
+*.log
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.phpunit.result.cache
+/.phpunit.cache
+/.phpactor.json
+
+# ============================================
+#  IDE / editor
+# ============================================
+/.idea
+/.vscode
+/.nova
+/.zed
+/.cursor/
+/.codex
+_ide_helper.php
+
+# ============================================
+#  Sistema
+# ============================================
+.DS_Store
+Thumbs.db
+auth.json
+Homestead.json
+Homestead.yaml
