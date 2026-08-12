@@ -185,7 +185,7 @@
                             es certificar la excelencia y fomentar la innovación a través de una crítica constructiva y
                             técnica.</p>
                         <div class="d-flex gap-3 hero-buttons">
-                            <a href="{{ asset('Lineamientos teìcnicos-administrativos ExpoTECNICA 2026 vers final (1).pdf') }}"
+                            <a href="{{ asset('lineamientos-expotecnica-2026.pdf') }}"
                                 download class="btn d-inline-flex align-items-center gap-2 text-decoration-none"
                                 style="background-color: #e67e22; color: #fff; padding: 10px 20px; border-radius: 0.5rem; font-weight: 700; font-size: 0.875rem; transition: all 0.2s;">
                                 <i class="bi bi-download"></i>
@@ -745,7 +745,7 @@
                     Versión del Sistema 4.2.1-stable</p>
             </div>
             <div class="d-flex gap-2">
-                <a href="{{ asset('Lineamientos teìcnicos-administrativos ExpoTECNICA 2026 vers final (1).pdf') }}" download
+                <a href="{{ asset('lineamientos-expotecnica-2026.pdf') }}" download
                     class="btn d-inline-flex align-items-center gap-2 text-decoration-none"
                     style="background-color: #d1e4fb; color: #091d2e; padding: 8px 16px; border-radius: 0.5rem; font-weight: 700; font-size: 0.8125rem; transition: all 0.2s;">
                     <i class="bi bi-file-earmark-text"></i>
