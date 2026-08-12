@@ -67,7 +67,7 @@
                             {{-- Confirm print button --}}
                             <tr>
                                 <td style="padding-top: 24px; text-align: center;">
-                                    <a href="{{ URL::signedRoute('avisos.impresion.confirmar', ['correoEnviado' => $correoEnviado->ID_Correo], now()->addDays(2)) }}" style="display: inline-block; background-color: #944a00; color: #ffffff; text-decoration: none; font-size: 14px; font-weight: 700; padding: 14px 28px; border-radius: 8px;">
+                                    <a href="{{ URL::signedRoute('avisos.impresion.confirmar', ['correoEnviado' => $correoEnviado->ID_Correo], now()->addDays(2), false) }}" style="display: inline-block; background-color: #944a00; color: #ffffff; text-decoration: none; font-size: 14px; font-weight: 700; padding: 14px 28px; border-radius: 8px;">
                                         &#128424; Documento impreso &mdash; avisar al administrador
                                     </a>
                                     <p style="margin: 12px 0 0 0; font-size: 12px; color: #897365;">

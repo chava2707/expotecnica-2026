@@ -287,5 +287,5 @@ Route::post('/juez/solicitar-ayuda', [SolicitudAyudaController::class, 'solicita
 // ==========================
 
 Route::get('/avisos/impresion/{correoEnviado}', [AvisoImpresionController::class, 'confirmar'])
-  ->middleware('signed')
+  ->middleware('signed:relative')
   ->name('avisos.impresion.confirmar');
