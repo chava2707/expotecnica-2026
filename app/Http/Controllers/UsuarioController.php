@@ -60,7 +60,11 @@ class UsuarioController extends Controller
     public function store(Request $request)
     {
         $validator = validator($request->all(), [
-            'cedula'            => 'required|integer|unique:personas,ID_Cedula',
+            'cedula'            => ['required', 'integer', function ($attribute, $value, $fail) {
+                if (User::where('IDPersona', $value)->exists()) {
+                    $fail('Esta cédula ya tiene un usuario registrado.');
+                }
+            }],
             'nombre'            => 'required|string|max:255',
             'apellido_1'        => 'required|string|max:255',
             'apellido_2'        => 'nullable|string|max:255',
@@ -80,13 +84,24 @@ class UsuarioController extends Controller
         $request->replace($validator->validated());
 
         DB::transaction(function () use ($request) {
-            $persona = Persona::create([
-                'ID_Cedula'         => $request->cedula,
-                'Nombre'            => $request->nombre,
-                'Apellido_1'        => $request->apellido_1,
-                'Apellido_2'        => $request->apellido_2,
-                'Estado'            => true,
-            ]);
+            $persona = Persona::find($request->cedula);
+
+            if ($persona) {
+                $persona->update([
+                    'Nombre'     => $request->nombre,
+                    'Apellido_1' => $request->apellido_1,
+                    'Apellido_2' => $request->apellido_2,
+                    'Estado'     => true,
+                ]);
+            } else {
+                $persona = Persona::create([
+                    'ID_Cedula'         => $request->cedula,
+                    'Nombre'            => $request->nombre,
+                    'Apellido_1'        => $request->apellido_1,
+                    'Apellido_2'        => $request->apellido_2,
+                    'Estado'            => true,
+                ]);
+            }
 
             User::create([
                 'IDPersona'         => $persona->ID_Cedula,
@@ -98,19 +113,15 @@ class UsuarioController extends Controller
                 'Activo'            => true,
             ]);
 
-            Correo::create([
-                'IDPersona'     => $persona->ID_Cedula,
-                'Correo'        => $request->email,
-                'Activo'        => true,
-                'Es_Principal'  => true,
-            ]);
+            Correo::updateOrCreate(
+                ['IDPersona' => $persona->ID_Cedula, 'Es_Principal' => true],
+                ['Correo'    => $request->email, 'Activo' => true]
+            );
 
-            Telefono::create([
-                'IDPersona'         => $persona->ID_Cedula,
-                'Numero_Telefono'   => $request->telefono,
-                'Activo'            => true,
-                'Es_Principal'      => true,
-            ]);
+            Telefono::updateOrCreate(
+                ['IDPersona' => $persona->ID_Cedula, 'Es_Principal' => true],
+                ['Numero_Telefono' => $request->telefono, 'Activo' => true]
+            );
         });
 
         $nombreCompleto = $request->nombre . ' ' . $request->apellido_1;
@@ -135,6 +146,8 @@ class UsuarioController extends Controller
         ]);
 
         $usuario = User::findOrFail($id);
+        $emailOriginal = $usuario->email;
+
         $usuario->update([
             'name'             => $request->name,
             'email'            => $request->email,
@@ -143,13 +156,45 @@ class UsuarioController extends Controller
             'Activo'           => $request->boolean('Activo'),
         ]);
 
+        if ($emailOriginal !== $request->email && $usuario->IDPersona) {
+            Correo::where('IDPersona', $usuario->IDPersona)
+                ->where('Es_Principal', true)
+                ->update(['Correo' => $request->email]);
+        }
+
         return redirect()->route('admin.usuarios')->with('success', 'Usuario actualizado correctamente.');
+    }
+
+    public function reenviarCredenciales(string $id)
+    {
+        $usuario = User::with('persona')->findOrFail($id);
+
+        Mail::to($usuario->email)->send(new CuentaCreadaMail(
+            $usuario->name,
+            $usuario->email,
+            (string) $usuario->IDPersona,
+            $usuario->Nombre_usuario ?? '',
+        ));
+
+        return redirect()->route('admin.usuarios')
+            ->with('success', 'Correo de credenciales reenviado a ' . $usuario->email . '.');
     }
 
     public function destroy(string $id)
     {
         $usuario = User::findOrFail($id);
-        $usuario->delete();
+
+        DB::transaction(function () use ($usuario) {
+            $idPersona = $usuario->IDPersona;
+
+            $usuario->delete();
+
+            if ($idPersona) {
+                Correo::where('IDPersona', $idPersona)->delete();
+                Telefono::where('IDPersona', $idPersona)->delete();
+                Persona::where('ID_Cedula', $idPersona)->delete();
+            }
+        });
 
         return redirect()->route('admin.usuarios')->with('success', 'Usuario eliminado correctamente.');
     }

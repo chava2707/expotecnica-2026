@@ -143,6 +143,8 @@
     }
     .btn-action.edit { color: #4e6073; }
     .btn-action.edit:hover { background-color: #e6e8ea; color: #944a00; }
+    .btn-action.mail { color: #1a73e8; }
+    .btn-action.mail:hover { background-color: #d1e4fb; color: #091d2e; }
     .btn-action.view { color: #006d37; }
     .btn-action.view:hover { background-color: #d1f7df; color: #006d37; }
     .btn-action.delete { color: #ba1a1a; }
@@ -407,6 +409,13 @@
                                     data-activo="{{ $usuario->Activo ? '1' : '0' }}">
                                     <i class="bi bi-pencil" style="font-size: 1rem;"></i>
                                 </button>
+                                <form action="{{ route('admin.usuarios.reenviar', $usuario->id) }}" method="POST"
+                                    onsubmit="return confirm('¿Reenviar las credenciales de acceso a {{ $usuario->email }}?');">
+                                    @csrf
+                                    <button type="submit" class="btn-action mail" title="Reenviar credenciales">
+                                        <i class="bi bi-envelope-arrow-up" style="font-size: 1rem;"></i>
+                                    </button>
+                                </form>
                                 <button class="btn-action delete" title="Eliminar" onclick="confirmarEliminacion({{ $usuario->id }}, '{{ addslashes($usuario->name) }}')">
                                     <i class="bi bi-trash" style="font-size: 1rem;"></i>
                                 </button>

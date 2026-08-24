@@ -74,6 +74,9 @@ Route::middleware(['auth', 'admin'])->group(function () {
   Route::post('/admin/usuarios', [UsuarioController::class, 'store'])
     ->name('admin.usuarios.store');
 
+  Route::post('/admin/usuarios/{id}/reenviar', [UsuarioController::class, 'reenviarCredenciales'])
+    ->name('admin.usuarios.reenviar');
+
   Route::put('/admin/usuarios/{id}', [UsuarioController::class, 'update'])
     ->name('admin.usuarios.update');
 
