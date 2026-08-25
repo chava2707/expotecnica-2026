@@ -15,6 +15,7 @@ use App\Models\Apartado;
 use App\Models\SolicitudEdicion;
 use App\Models\SolicitudAyuda;
 use App\Models\AvisoImpresion;
+use App\Models\Rubrica;
 
 class DashboardController extends Controller
 {
@@ -75,18 +76,30 @@ class DashboardController extends Controller
         $enRevision = Calificacion::where('Estado', 'Pendiente')->count();
         $marcados = Calificacion::where('Estado', 'Marcado')->count();
 
+        $totalRubricasActivas = Rubrica::where('Estado', 'Activo')->count();
+
         $jueces = User::whereHas('rol', fn($q) => $q->whereIn('Nombre_rol', ['Juez', 'Jurado', 'Juez Suplente', 'Jurado Suplente']))
-            ->with(['persona', 'rol', 'personasAsignadas.proyecto.categoria'])
+            ->with(['persona', 'rol', 'personasAsignadas.proyecto.categoria', 'personasAsignadas.proyecto.calificaciones'])
             ->get()
-            ->map(function ($juez) {
+            ->map(function ($juez) use ($totalRubricasActivas) {
                 $asignaciones = $juez->personasAsignadas;
-                $totalAsignados = $asignaciones->count();
-                $proyectosIds = $asignaciones->pluck('ID_Proyecto')->unique();
-                $evaluados = Calificacion::whereIn('ID_Proyecto', $proyectosIds)
-                    ->where('ID_Usuario', $juez->id)
-                    ->distinct('ID_Proyecto')
-                    ->count('ID_Proyecto');
-                $progreso = $totalAsignados > 0 ? round(($evaluados / $totalAsignados) * 100) : 0;
+                $proyectosAsignados = $asignaciones->pluck('proyecto')->filter()->unique('ID_Proyecto');
+                $totalAsignados = $proyectosAsignados->count();
+
+                $completados = $proyectosAsignados->filter(function ($proyecto) use ($juez, $totalRubricasActivas) {
+                    if ($totalRubricasActivas === 0) {
+                        return false;
+                    }
+
+                    $rubricasEvaluadas = $proyecto->calificaciones
+                        ->where('ID_Usuario', $juez->id)
+                        ->pluck('ID_Rubrica')
+                        ->unique();
+
+                    return $rubricasEvaluadas->count() >= $totalRubricasActivas;
+                })->count();
+
+                $progreso = $totalAsignados > 0 ? round(($completados / $totalAsignados) * 100) : 0;
 
                 $categorias = $asignaciones->pluck('proyecto.categoria.Nombre')->filter()->unique()->implode(', ');
 
@@ -97,7 +110,7 @@ class DashboardController extends Controller
                     'categoria' => $categorias ?: 'Sin asignar',
                     'total_asignados' => $totalAsignados,
                     'progreso' => $progreso,
-                    'completado' => $progreso >= 100,
+                    'completado' => $totalAsignados > 0 && $completados >= $totalAsignados,
                 ];
             });
 
