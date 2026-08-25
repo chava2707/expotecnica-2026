@@ -90,11 +90,6 @@
                            style="font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">
                             ¿Olvidaste tu contraseña?
                         </a>
-                        <a href="#" class="text-decoration-none d-inline-flex align-items-center gap-1 link-secondary-custom"
-                           style="font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">
-                            <i class="bi bi-headset" style="font-size: 0.75rem;"></i>
-                            Soporte Técnico
-                        </a>
                     </div>
                 </form>
             </div>
