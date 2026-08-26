@@ -706,13 +706,16 @@
                         </thead>
                         <tbody>
                             @forelse($jueces as $juez)
-                            <tr>
+                            <tr class="juez-row" style="cursor: pointer;" onclick="toggleJudgeDetail({{ $juez['id'] }})">
                                 <td>
                                     <div class="d-flex align-items-center gap-2">
                                         <div class="judge-avatar" style="background-color: {{ ['#ffb783','#d1e4fb','#61de8a','#e8d5f5','#f5d5d5'][($juez['id'] % 5)] }}; color: #191c1e;">
                                             {{ strtoupper(substr($juez['nombre'], 0, 2)) }}
                                         </div>
-                                        <strong style="color: #191c1e;">{{ $juez['nombre'] }}</strong>
+                                        <div>
+                                            <strong style="color: #191c1e;">{{ $juez['nombre'] }}</strong>
+                                            <i class="bi bi-chevron-down" style="font-size: 12px; color: #897365; margin-left: 4px;" id="chevron-{{ $juez['id'] }}"></i>
+                                        </div>
                                     </div>
                                 </td>
                                 <td style="color: #564337;">{{ $juez['rol'] }}</td>
@@ -733,6 +736,53 @@
                                     @else
                                         <span class="status-badge" style="background-color: #f2f4f6; color: #4e6073;">Sin Asignar</span>
                                     @endif
+                                </td>
+                            </tr>
+                            {{-- Detalle expandible --}}
+                            <tr id="detail-{{ $juez['id'] }}" style="display: none;">
+                                <td colspan="5" style="padding: 0; border-bottom: 2px solid #E2E8F0;">
+                                    <div style="padding: 16px 24px 20px; background-color: #f9fafb;">
+                                        @forelse($juez['proyectos'] as $proy)
+                                        <div style="background: #fff; border: 1px solid #E2E8F0; border-radius: 10px; padding: 14px 18px; margin-bottom: 10px;">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <div>
+                                                    <span style="font-size: 0.875rem; font-weight: 700; color: #191c1e;">{{ $proy['nombre'] }}</span>
+                                                    <span style="font-size: 0.75rem; color: #897365; margin-left: 8px;">{{ $proy['categoria'] }}</span>
+                                                </div>
+                                                <div>
+                                                    @if($proy['completado'])
+                                                        <span class="status-badge completed" style="font-size: 0.5625rem;">Completado</span>
+                                                    @else
+                                                        <span class="status-badge in-progress" style="font-size: 0.5625rem;">{{ $proy['evaluadas'] }}/{{ $proy['total_rubricas'] }}</span>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                            <div class="d-flex gap-3 flex-wrap">
+                                                @foreach($proy['rubricas'] as $rub)
+                                                <div style="display: flex; align-items: center; gap: 6px; font-size: 0.75rem;">
+                                                    @if($rub['evaluada'] && $rub['estado'] === 'Completado')
+                                                        <i class="bi bi-check-circle-fill" style="font-size: 16px; color: #29af61;"></i>
+                                                        <span style="font-weight: 600; color: #006d37;">{{ $rub['nombre'] }}</span>
+                                                        <span style="color: #897365;">({{ $rub['nota'] }})</span>
+                                                    @elseif($rub['evaluada'] && $rub['estado'] === 'Borrador')
+                                                        <i class="bi bi-pencil-square" style="font-size: 16px; color: #e67e22;"></i>
+                                                        <span style="font-weight: 600; color: #944a00;">{{ $rub['nombre'] }}</span>
+                                                        <span style="color: #897365;">(Borrador)</span>
+                                                    @else
+                                                        <i class="bi bi-circle" style="font-size: 16px; color: #d8dadc;"></i>
+                                                        <span style="font-weight: 600; color: #897365;">{{ $rub['nombre'] }}</span>
+                                                        <span style="color: #d8dadc;">(Pendiente)</span>
+                                                    @endif
+                                                </div>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                        @empty
+                                        <div style="text-align: center; color: #897365; font-size: 0.8125rem; padding: 12px;">
+                                            No hay proyectos asignados.
+                                        </div>
+                                        @endforelse
+                                    </div>
                                 </td>
                             </tr>
                             @empty
@@ -766,6 +816,18 @@
         const overlay = document.getElementById('sidebarOverlay');
         sidebar.classList.toggle('show');
         overlay.classList.toggle('show');
+    }
+
+    function toggleJudgeDetail(juezId) {
+        const detail = document.getElementById('detail-' + juezId);
+        const chevron = document.getElementById('chevron-' + juezId);
+        if (detail.style.display === 'none') {
+            detail.style.display = '';
+            if (chevron) { chevron.classList.remove('bi-chevron-down'); chevron.classList.add('bi-chevron-up'); }
+        } else {
+            detail.style.display = 'none';
+            if (chevron) { chevron.classList.remove('bi-chevron-up'); chevron.classList.add('bi-chevron-down'); }
+        }
     }
 
     const API_URL = "{{ route('admin.dashboard.api') }}";
@@ -844,14 +906,34 @@
                 if (data.jueces.length === 0) {
                     juecesBody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><i class="bi bi-people"></i><p>No hay jueces registrados</p></div></td></tr>';
                 } else {
-                    juecesBody.innerHTML = data.jueces.map(j => `
-                        <tr>
+                    juecesBody.innerHTML = data.jueces.map(j => {
+                        const proyectosHtml = (j.proyectos || []).map(p => {
+                            const rubricasHtml = p.rubricas.map(r => {
+                                if (r.evaluada && r.estado === 'Completado') {
+                                    return `<div style="display:flex;align-items:center;gap:6px;font-size:0.75rem;"><i class="bi bi-check-circle-fill" style="font-size:16px;color:#29af61;"></i><span style="font-weight:600;color:#006d37;">${r.nombre}</span><span style="color:#897365;">(${r.nota})</span></div>`;
+                                } else if (r.evaluada && r.estado === 'Borrador') {
+                                    return `<div style="display:flex;align-items:center;gap:6px;font-size:0.75rem;"><i class="bi bi-pencil-square" style="font-size:16px;color:#e67e22;"></i><span style="font-weight:600;color:#944a00;">${r.nombre}</span><span style="color:#897365;">(Borrador)</span></div>`;
+                                } else {
+                                    return `<div style="display:flex;align-items:center;gap:6px;font-size:0.75rem;"><i class="bi bi-circle" style="font-size:16px;color:#d8dadc;"></i><span style="font-weight:600;color:#897365;">${r.nombre}</span><span style="color:#d8dadc;">(Pendiente)</span></div>`;
+                                }
+                            }).join('');
+
+                            return `<div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:14px 18px;margin-bottom:10px;"><div class="d-flex justify-content-between align-items-center mb-2"><div><span style="font-size:0.875rem;font-weight:700;color:#191c1e;">${p.nombre}</span><span style="font-size:0.75rem;color:#897365;margin-left:8px;">${p.categoria}</span></div><div>${p.completado ? '<span class="status-badge completed" style="font-size:0.5625rem;">Completado</span>' : '<span class="status-badge in-progress" style="font-size:0.5625rem;">' + p.evaluadas + '/' + p.total_rubricas + '</span>'}</div></div><div class="d-flex gap-3 flex-wrap">${rubricasHtml}</div></div>`;
+                        }).join('');
+
+                        const detalleHtml = proyectosHtml || '<div style="text-align:center;color:#897365;font-size:0.8125rem;padding:12px;">No hay proyectos asignados.</div>';
+
+                        return `
+                        <tr class="juez-row" style="cursor:pointer;" onclick="toggleJudgeDetail(${j.id})">
                             <td>
                                 <div class="d-flex align-items-center gap-2">
                                     <div class="judge-avatar" style="background-color: ${avatarColors[j.id % 5]}; color: #191c1e;">
                                         ${j.nombre.substring(0, 2).toUpperCase()}
                                     </div>
-                                    <strong style="color: #191c1e;">${j.nombre}</strong>
+                                    <div>
+                                        <strong style="color: #191c1e;">${j.nombre}</strong>
+                                        <i class="bi bi-chevron-down" style="font-size:12px;color:#897365;margin-left:4px;" id="chevron-${j.id}"></i>
+                                    </div>
                                 </div>
                             </td>
                             <td style="color: #564337;">${j.rol}</td>
@@ -873,7 +955,8 @@
                                 }
                             </td>
                         </tr>
-                    `).join('');
+                        <tr id="detail-${j.id}" style="display:none;"><td colspan="5" style="padding:0;border-bottom:2px solid #E2E8F0;"><div style="padding:16px 24px 20px;background-color:#f9fafb;">${detalleHtml}</div></td></tr>`;
+                    }).join('');
                 }
 
                 const solicitudesSection = document.getElementById('solicitudes-section');

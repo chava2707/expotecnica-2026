@@ -78,29 +78,48 @@ class DashboardController extends Controller
 
         $totalRubricasActivas = Rubrica::where('Estado', 'Activo')->count();
 
+        $rubricasActivas = Rubrica::where('Estado', 'Activo')->get();
+
         $jueces = User::whereHas('rol', fn($q) => $q->whereIn('Nombre_rol', ['Juez', 'Jurado', 'Juez Suplente', 'Jurado Suplente']))
-            ->with(['persona', 'rol', 'personasAsignadas.proyecto.categoria', 'personasAsignadas.proyecto.calificaciones'])
+            ->with(['persona', 'rol', 'personasAsignadas.proyecto.categoria', 'personasAsignadas.proyecto.calificaciones.rubrica'])
             ->get()
-            ->map(function ($juez) use ($totalRubricasActivas) {
+            ->map(function ($juez) use ($totalRubricasActivas, $rubricasActivas) {
                 $asignaciones = $juez->personasAsignadas;
                 $proyectosAsignados = $asignaciones->pluck('proyecto')->filter()->unique('ID_Proyecto');
                 $totalAsignados = $proyectosAsignados->count();
 
-                $completados = $proyectosAsignados->filter(function ($proyecto) use ($juez, $totalRubricasActivas) {
-                    if ($totalRubricasActivas === 0) {
-                        return false;
-                    }
+                $proyectosDetalle = $proyectosAsignados->map(function ($proyecto) use ($juez, $rubricasActivas) {
+                    $calificacionesJuez = $proyecto->calificaciones->where('ID_Usuario', $juez->id);
+                    $rubricasEvaluadas = $calificacionesJuez->pluck('ID_Rubrica')->unique();
 
-                    $rubricasEvaluadas = $proyecto->calificaciones
-                        ->where('ID_Usuario', $juez->id)
-                        ->pluck('ID_Rubrica')
-                        ->unique();
+                    $rubricasDetalle = $rubricasActivas->map(function ($rubrica) use ($calificacionesJuez, $rubricasEvaluadas) {
+                        $cal = $calificacionesJuez->firstWhere('ID_Rubrica', $rubrica->ID_Rubrica);
+                        return [
+                            'id' => $rubrica->ID_Rubrica,
+                            'nombre' => $rubrica->Nombre,
+                            'evaluada' => $rubricasEvaluadas->contains($rubrica->ID_Rubrica),
+                            'estado' => $cal ? $cal->Estado : 'Sin evaluar',
+                            'nota' => $cal && $cal->Nota_Final !== null ? $cal->Nota_Final : null,
+                        ];
+                    })->values();
 
-                    return $rubricasEvaluadas->count() >= $totalRubricasActivas;
-                })->count();
+                    $totalRubricas = $rubricasActivas->count();
+                    $evaluadasCount = $rubricasEvaluadas->count();
+                    $completado = $totalRubricas > 0 && $evaluadasCount >= $totalRubricas;
 
+                    return [
+                        'id' => $proyecto->ID_Proyecto,
+                        'nombre' => $proyecto->Nombre,
+                        'categoria' => $proyecto->categoria->Nombre ?? 'Sin categoría',
+                        'rubricas' => $rubricasDetalle->toArray(),
+                        'evaluadas' => $evaluadasCount,
+                        'total_rubricas' => $totalRubricas,
+                        'completado' => $completado,
+                    ];
+                })->values();
+
+                $completados = $proyectosDetalle->where('completado', true)->count();
                 $progreso = $totalAsignados > 0 ? round(($completados / $totalAsignados) * 100) : 0;
-
                 $categorias = $asignaciones->pluck('proyecto.categoria.Nombre')->filter()->unique()->implode(', ');
 
                 return [
@@ -111,8 +130,11 @@ class DashboardController extends Controller
                     'total_asignados' => $totalAsignados,
                     'progreso' => $progreso,
                     'completado' => $totalAsignados > 0 && $completados >= $totalAsignados,
+                    'proyectos' => $proyectosDetalle->toArray(),
                 ];
-            });
+            })
+            ->values()
+            ->toArray();
 
         $actividadReciente = User::with(['persona', 'rol'])
             ->latest('created_at')
