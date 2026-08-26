@@ -118,8 +118,10 @@ class DashboardController extends Controller
                     ];
                 })->values();
 
+                $totalRubricasAll = $proyectosDetalle->sum('total_rubricas');
+                $evaluadasAll = $proyectosDetalle->sum('evaluadas');
+                $progreso = $totalRubricasAll > 0 ? round(($evaluadasAll / $totalRubricasAll) * 100) : 0;
                 $completados = $proyectosDetalle->where('completado', true)->count();
-                $progreso = $totalAsignados > 0 ? round(($completados / $totalAsignados) * 100) : 0;
                 $categorias = $asignaciones->pluck('proyecto.categoria.Nombre')->filter()->unique()->implode(', ');
 
                 return [
