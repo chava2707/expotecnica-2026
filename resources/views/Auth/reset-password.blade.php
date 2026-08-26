@@ -35,7 +35,7 @@
                 <form action="{{ route('password.update') }}" method="POST" class="d-flex flex-column gap-3">
                     @csrf
 
-                    <input type="hidden" name="id" value="{{ $id }}">
+                    <input type="hidden" name="payload" value="{{ $payload }}">
                     <input type="hidden" name="email" value="{{ $email }}">
 
                     @if($errors->any())

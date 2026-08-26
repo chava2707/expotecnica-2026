@@ -58,11 +58,9 @@ Route::get('/forgot-password', [ForgotPasswordController::class, 'showLinkReques
 Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])
     ->name('password.email');
 Route::get('/reset-password', [ForgotPasswordController::class, 'showResetForm'])
-    ->name('password.reset')
-    ->middleware('signed:relative');
+    ->name('password.reset');
 Route::post('/reset-password', [ForgotPasswordController::class, 'reset'])
-    ->name('password.update')
-    ->middleware('signed:relative');
+    ->name('password.update');
 
 // ==========================
 // PANEL ADMINISTRATIVO
