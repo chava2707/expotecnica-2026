@@ -22,6 +22,7 @@ use App\Http\Controllers\SolicitudAyudaController;
 use App\Http\Controllers\EjeTematicoController;
 use App\Http\Controllers\ConfiguracionController;
 use App\Http\Controllers\AvisoImpresionController;
+use App\Http\Controllers\ForgotPasswordController;
 
 Route::get('/', function () {
   $categorias = Categoria::withCount('proyectos')->get();
@@ -50,6 +51,18 @@ Route::get('/proyectos/{id}', [ProyectoController::class, 'show'])
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+// Password Recovery
+Route::get('/forgot-password', [ForgotPasswordController::class, 'showLinkRequestForm'])
+    ->name('password.request');
+Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])
+    ->name('password.email');
+Route::get('/reset-password', [ForgotPasswordController::class, 'showResetForm'])
+    ->name('password.reset')
+    ->middleware('signed:relative');
+Route::post('/reset-password', [ForgotPasswordController::class, 'reset'])
+    ->name('password.update')
+    ->middleware('signed:relative');
 
 // ==========================
 // PANEL ADMINISTRATIVO

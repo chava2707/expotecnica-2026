@@ -86,7 +86,7 @@
 
                     {{-- Secondary Links --}}
                     <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2 pt-1">
-                        <a href="#" class="text-decoration-none d-inline-flex align-items-center gap-1 link-primary-custom"
+                        <a href="{{ route('password.request') }}" class="text-decoration-none d-inline-flex align-items-center gap-1 link-primary-custom"
                            style="font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">
                             ¿Olvidaste tu contraseña?
                         </a>
