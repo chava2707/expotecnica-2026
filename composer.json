@@ -1,10 +1,16 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/laravel",
+    "name": "chava2707/expotecnica-2026",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
-    "keywords": ["laravel", "framework"],
+    "description": "Sistema de gestión y calificación de proyectos para la ExpoTÉCNICA 2026: registro de proyectos, asignación de jueces, evaluación con rúbricas y resultados en tiempo real.",
+    "keywords": ["laravel", "expotecnica", "calificacion", "rubricas", "blade", "docker"],
     "license": "MIT",
+    "authors": [
+        {
+            "name": "Jean Carlos Chavarría Portugués",
+            "homepage": "https://github.com/chava2707"
+        }
+    ],
     "require": {
         "php": "^8.3",
         "barryvdh/laravel-dompdf": "^3.1",

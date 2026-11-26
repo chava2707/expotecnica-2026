@@ -1,58 +1,186 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+<div align="center">
+  <img src="docs/banner.svg" alt="ExpoTÉCNICA 2026 — Sistema de gestión y calificación de proyectos" width="100%" />
+</div>
+
+<h1 align="center">Sistema de Calificación de Proyectos</h1>
 
 <p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+  Plataforma web para registrar, asignar y calificar los proyectos de la <b>ExpoTÉCNICA 2026</b>.
 </p>
 
-## About Laravel
+<p align="center">
+  <a href="https://github.com/chava2707/expotecnica-2026/actions/workflows/ci.yml"><img src="https://github.com/chava2707/expotecnica-2026/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+  <img src="https://img.shields.io/badge/Laravel-13-FF2D20?logo=laravel&logoColor=white" alt="Laravel 13" />
+  <img src="https://img.shields.io/badge/PHP-8.3%2B-777BB4?logo=php&logoColor=white" alt="PHP 8.3+" />
+  <img src="https://img.shields.io/badge/MySQL-8.0-4479A1?logo=mysql&logoColor=white" alt="MySQL 8" />
+  <img src="https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white" alt="Docker" />
+  <img src="https://img.shields.io/badge/Licencia-MIT-9ECE6A" alt="MIT" />
+</p>
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Descripción
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+La ExpoTÉCNICA reúne proyectos estudiantiles que deben ser evaluados por un jurado con
+rúbricas comunes. Gestionar eso en hojas de cálculo se vuelve lento y propenso a errores.
 
-## Learning Laravel
+Este sistema centraliza todo el flujo: registro de proyectos y sus archivos, asignación de
+jueces, evaluación en línea con rúbricas ponderadas, cálculo de resultados, generación de PDFs
+y notificaciones por correo — con un panel administrativo que muestra el avance en tiempo real.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Funcionalidades
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### 🌐 Público
+- Página de inicio con categorías, cantidad de proyectos y porcentaje de avance de la evaluación.
+- Ficha pública de cada proyecto con su información y archivos.
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+### ⚖️ Jueces
+- Panel con los proyectos que tiene asignados y su estado.
+- Evaluación en línea pregunta por pregunta, con guardado de **borrador** y envío final.
+- Consulta de rúbricas y lineamientos de la expo.
+- Solicitudes de **edición** (reabrir una evaluación cerrada) y de **ayuda** al administrador.
+- Cambio de contraseña y notificaciones por correo al completar una evaluación.
 
-## Agentic Development
+### 🛠️ Administración
+- **Dashboard** con métricas y avance de los jueces en tiempo real.
+- CRUD de usuarios, proyectos, categorías, ejes temáticos, apartados y preguntas.
+- **Asignación** de jueces y suplentes a cada proyecto.
+- **Resultados** consolidados y descarga de rúbricas evaluadas en PDF.
+- Aprobación o rechazo de solicitudes de edición y ayuda.
+- **Avisos de impresión** con enlace firmado enviado por correo.
+- Configuración general del evento.
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## Stack
 
-```bash
-composer require laravel/boost --dev
+| Capa | Tecnología |
+| :-- | :-- |
+| Backend | Laravel 13 · PHP 8.3+ |
+| Vistas | Blade · Bootstrap 5 · Bootstrap Icons |
+| Frontend build | Vite · Tailwind CSS 4 |
+| Base de datos | MySQL 8 |
+| Reportes | DomPDF |
+| Correos | Cola de trabajos (`database`) + SMTP |
+| Infraestructura | Docker · Docker Compose · Apache |
 
-php artisan boost:install
+## Arquitectura
+
+```
+                    ┌──────────────┐
+   Navegador  ───▶  │  app (Apache)│  :8000
+                    │  PHP + Laravel│
+                    └──────┬───────┘
+                           │
+              ┌────────────┼─────────────┐
+              ▼            ▼             ▼
+        ┌──────────┐  ┌─────────┐  ┌──────────────┐
+        │  MySQL 8 │  │  Cola   │  │  Volúmenes   │
+        │          │  │ (jobs)  │  │ storage/uploads │
+        └──────────┘  └────┬────┘  └──────────────┘
+                           │
+                    ┌──────▼───────┐
+                    │ worker       │  envía correos
+                    │ queue:work   │
+                    └──────────────┘
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Los correos se encolan en la tabla `jobs`; el contenedor `worker` los procesa. Sin worker
+la aplicación funciona igual, pero las notificaciones quedan pendientes.
 
-## Contributing
+## Puesta en marcha con Docker
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Requisitos: **Docker Desktop** (con WSL 2 en Windows).
 
-## Code of Conduct
+```bash
+git clone https://github.com/chava2707/expotecnica-2026.git
+cd expotecnica-2026
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+# 1. Variables de entorno
+cp .env.example .env          # Windows: copy .env.example .env
 
-## Security Vulnerabilities
+# 2. Edita .env y define al menos MAIL_USERNAME y MAIL_PASSWORD
+#    (contraseña de aplicación de Gmail, no tu contraseña normal)
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+# 3. Levanta los servicios (app, worker y MySQL)
+docker compose up -d --build
 
-## License
+# 4. Datos iniciales: roles, rúbricas, categorías y usuarios de prueba
+docker compose exec app php artisan db:seed --force
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+La aplicación queda en **http://localhost:8000**. La `APP_KEY` se genera sola la primera vez y
+se guarda en el volumen de `storage`, así las sesiones sobreviven a los reinicios.
+
+Para detener: `docker compose down` (los datos se conservan en volúmenes).
+
+## Instalación local (sin Docker)
+
+Requisitos: PHP 8.3+, Composer 2, MySQL 8, Node.js 20+.
+
+```bash
+composer install
+cp .env.example .env
+php artisan key:generate
+
+# En .env: DB_HOST=127.0.0.1 y tus credenciales de MySQL
+php artisan migrate --seed
+php artisan storage:link
+
+npm install && npm run build
+
+# Servidor + cola + Vite en una sola terminal
+composer dev
+```
+
+Más detalle en [`docs/instalacion.md`](docs/instalacion.md).
+
+## Variables de entorno
+
+Las relevantes están comentadas en [`.env.example`](.env.example). Las que más se tocan:
+
+| Variable | Para qué sirve |
+| :-- | :-- |
+| `APP_ENV` / `APP_DEBUG` | `production` y `false` en producción |
+| `APP_URL` | URL base usada en correos y enlaces firmados |
+| `DB_*` | Conexión a MySQL (`DB_HOST=mysql` en Docker, `127.0.0.1` en local) |
+| `MAIL_*` | SMTP para las notificaciones (Gmail requiere contraseña de aplicación) |
+| `QUEUE_CONNECTION` | `database` en producción; `sync` solo para pruebas |
+
+> **Nunca subas tu `.env`.** Ya está en `.gitignore`. Si una credencial llegó a publicarse,
+> rótala: borrar el archivo no la elimina del historial de git.
+
+## Estructura del proyecto
+
+```
+app/
+  Http/Controllers/     Controladores por módulo (admin, juez, auth)
+  Http/Middleware/      AdminMiddleware
+  Jobs/                 Envío de correos en cola
+  Models/               Eloquent: proyecto, rúbrica, calificación, persona...
+database/
+  migrations/           Esquema completo
+  seeders/              Roles, categorías, rúbricas y datos de prueba
+docker/                 entrypoint.sh y configuración de Apache
+docs/                   Instalación y despliegue
+resources/views/        Blade (público, admin, juez, PDFs, correos)
+routes/web.php          Rutas y permisos
+tests/                  Pruebas automatizadas
+```
+
+## Pruebas y CI
+
+```bash
+php artisan test
+```
+
+Las pruebas cubren la página pública y el flujo de autenticación (inicio y cierre de sesión,
+credenciales inválidas). Cada push a `main` y cada pull request las ejecuta en GitHub Actions
+([`.github/workflows/ci.yml`](.github/workflows/ci.yml)).
+
+## Documentación
+
+- [Instalación local paso a paso](docs/instalacion.md)
+- [Despliegue con Docker](docs/despliegue.md)
+
+---
+
+<sub>Desarrollado por <a href="https://github.com/chava2707">chava2707</a> · Cartago, Costa Rica · Licencia MIT</sub>

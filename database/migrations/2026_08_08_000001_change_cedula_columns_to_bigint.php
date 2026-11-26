@@ -19,7 +19,11 @@ return new class extends Migration
             $table->dropForeign(['IDPersona']);
         });
 
-        DB::statement('ALTER TABLE personas MODIFY COLUMN ID_Cedula BIGINT NOT NULL');
+        // MySQL necesita MODIFY COLUMN; otros motores (SQLite en pruebas) ya
+        // almacenan los enteros como 64 bits.
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE personas MODIFY COLUMN ID_Cedula BIGINT NOT NULL');
+        }
 
         Schema::table('users', function (Blueprint $table) {
             $table->bigInteger('IDPersona')->nullable()->change();
@@ -54,7 +58,9 @@ return new class extends Migration
             $table->dropForeign(['IDPersona']);
         });
 
-        DB::statement('ALTER TABLE personas MODIFY COLUMN ID_Cedula INT NOT NULL');
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE personas MODIFY COLUMN ID_Cedula INT NOT NULL');
+        }
 
         Schema::table('users', function (Blueprint $table) {
             $table->integer('IDPersona')->nullable()->change();

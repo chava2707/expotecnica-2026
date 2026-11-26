@@ -6,7 +6,7 @@ x-app-base: &app-base
   image: expotecnica-app
   restart: unless-stopped
   environment: &app-env
-    APP_NAME: "ExpoTECNICA"
+    APP_NAME: "ExpoTÉCNICA 2026"
     APP_ENV: "${APP_ENV:-production}"
     APP_DEBUG: "${APP_DEBUG:-0}"
     APP_URL: "${APP_URL:-http://localhost:8000}"
@@ -31,9 +31,10 @@ x-app-base: &app-base
     MAIL_MAILER: "${MAIL_MAILER:-smtp}"
     MAIL_HOST: "${MAIL_HOST:-smtp.gmail.com}"
     MAIL_PORT: "${MAIL_PORT:-587}"
-    MAIL_USERNAME: "${MAIL_USERNAME:-jkart2731@gmail.com}"
-    MAIL_PASSWORD: "${MAIL_PASSWORD:-prdckplaervizikb}"
-    MAIL_FROM_ADDRESS: "${MAIL_FROM_ADDRESS:-jkart2731@gmail.com}"
+    # Credenciales de correo: se definen en el archivo .env (nunca aquí).
+    MAIL_USERNAME: "${MAIL_USERNAME:-}"
+    MAIL_PASSWORD: "${MAIL_PASSWORD:-}"
+    MAIL_FROM_ADDRESS: "${MAIL_FROM_ADDRESS:-}"
     MAIL_FROM_NAME: "ExpoTECNICA"
     MAIL_ENCRYPTION: tls
   volumes:
